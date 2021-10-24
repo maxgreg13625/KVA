@@ -12,3 +12,7 @@ def test_get_golden_key_dict(pwd: str):
 
 	assert key_dict is not None and type(key_dict) == dict
 	assert pwd in key_dict and len(key_dict[pwd]) == 2
+
+def test_config():
+	config = read_config()
+	assert 'KVA' in config
