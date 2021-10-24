@@ -1,9 +1,14 @@
-import pytest
 from ..util import *
+import logging
+import pytest
+
+logger = logging.getLogger(__name__)
 
 @pytest.mark.parametrize('seed', [32, 64])
 def test_get_random_key(seed: int):
 	key = get_random_key(seed)
+
+	logger.info(f'random key: {key}')
 	assert key is not None and type(key) == bytes
 
 @pytest.mark.parametrize('pwd', ['test'])
