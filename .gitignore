@@ -127,3 +127,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# below ignore items are mainly for KVA
+*.txt
+*.ini
