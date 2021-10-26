@@ -10,12 +10,16 @@ class KVA_AES:
 	
 		if self.golden_key is None or self.iv is None:
 			self._setting_golden_key_and_iv()
+		else:
+			self.cipher = AES.new(key=self.golden_key,\
+				mode=AES.MODE_CBC, iv=self.iv)
 
 	def _setting_golden_key_and_iv(self):
 		pwd = self.config['KVA']['PWD']
 		# get salt and golden key
 		key_dict = get_golden_key_dict(pwd)
 		
-		cipher = AES.new(key_dict[pwd][1], AES.MODE_CBC)
+		self.cipher = AES.new(key_dict[pwd][1], AES.MODE_CBC)
 		self.golden_key = key_dict[pwd][1]
-		self.iv = cipher.iv
+		self.salt = key_dict[pwd][0]
+		self.iv = self.cipher.iv
