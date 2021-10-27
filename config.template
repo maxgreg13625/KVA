@@ -1,3 +1,4 @@
 [KVA]
 PWD=
-BIN_PATH
+BIN_PATH=
+SEED=

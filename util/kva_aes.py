@@ -10,16 +10,23 @@ class KVA_AES:
 	
 		if self.golden_key is None or self.iv is None:
 			self._setting_golden_key_and_iv()
+			self.export_bins()
 		else:
 			self.cipher = AES.new(key=self.golden_key,\
 				mode=AES.MODE_CBC, iv=self.iv)
 
 	def _setting_golden_key_and_iv(self):
 		pwd = self.config['KVA']['PWD']
+		seed = int(self.config['KVA']['SEED'])
 		# get salt and golden key
-		key_dict = get_golden_key_dict(pwd)
+		key_dict = get_golden_key_dict(pwd, seed)
 		
 		self.cipher = AES.new(key_dict[pwd][1], AES.MODE_CBC)
 		self.golden_key = key_dict[pwd][1]
 		self.salt = key_dict[pwd][0]
 		self.iv = self.cipher.iv
+
+	def export_bins(self):
+		export_bin(self.iv, 'iv')
+		export_bin(self.salt, 'salt')
+		export_bin(self.golden_key, 'gk')
