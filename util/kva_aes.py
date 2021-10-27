@@ -1,4 +1,4 @@
-from Crypto.Util.Padding import pad
+from Crypto.Util.Padding import pad, unpad
 from Crypto.Cipher import AES
 from .util import *
 
@@ -30,3 +30,17 @@ class KVA_AES:
 		export_bin(self.iv, 'iv')
 		export_bin(self.salt, 'salt')
 		export_bin(self.golden_key, 'gk')
+	
+	def encrypt(self, input_str: str):
+		input_str_bytes = input_str.encode()
+		result_bytes = self.cipher.encrypt(
+			pad(input_str_bytes, AES.block_size))
+		
+		# need further check how to transform to human readable str...
+		return result_bytes.decode()
+	
+	def decrypt(self, input_str: str):
+		input_str_bytes = input_str.encode()
+		result_bytes = unpad(self.cipher.decrypt(input_str_bytes),
+			AES.block_size)
+		return result_bytes.decode()
