@@ -130,5 +130,6 @@ dmypy.json
 
 # below ignore items are mainly for KVA
 *.txt
+!requirements.txt
 config.ini
 *.bin
