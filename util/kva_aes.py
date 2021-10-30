@@ -1,19 +1,28 @@
-from Crypto.Util.Padding import pad, unpad
+#from Crypto.Util.Padding import pad, unpad
 from Crypto.Cipher import AES
 from .util import *
+from base64 import b64decode, b64encode
 
 class KVA_AES:
 	def __init__(self, golden_key: bytes=None, iv: bytes=None) -> None:
 		self.config = read_config()
 		self.golden_key = golden_key
 		self.iv = iv
-	
+		self.block_size = 64
+
 		if self.golden_key is None or self.iv is None:
 			self._setting_golden_key_and_iv()
 			self.export_bins()
 		else:
 			self.cipher = AES.new(key=self.golden_key,\
 				mode=AES.MODE_CBC, iv=self.iv)
+
+	def _pad(self, s: str):
+		return s + (self.block_size - len(s) % self.block_size) *\
+			 chr(self.block_size - len(s) % self.block_size)
+
+	def _unpad(self, s):
+		return s[:-ord(s[len(s) - 1:])]
 
 	def _setting_golden_key_and_iv(self):
 		pwd = self.config['KVA']['PWD']
@@ -32,15 +41,13 @@ class KVA_AES:
 		export_bin(self.golden_key, 'gk')
 	
 	def encrypt(self, input_str: str):
-		input_str_bytes = input_str.encode()
 		result_bytes = self.cipher.encrypt(
-			pad(input_str_bytes, AES.block_size))
-		
+			self._pad(input_str))
+
 		# need further check how to transform to human readable str...
-		return result_bytes.decode()
+		return b64encode(result_bytes)
 	
 	def decrypt(self, input_str: str):
-		input_str_bytes = input_str.encode()
-		result_bytes = unpad(self.cipher.decrypt(input_str_bytes),
-			AES.block_size)
+		input_str_bytes = b64decode(input_str)
+		result_bytes = self._unpad(self.cipher.decrypt(input_str_bytes))
 		return result_bytes.decode()
