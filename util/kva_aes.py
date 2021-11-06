@@ -1,7 +1,10 @@
-#from Crypto.Util.Padding import pad, unpad
+from Crypto.Util.Padding import pad, unpad
 from Crypto.Cipher import AES
 from .util import *
 from base64 import b64decode, b64encode
+import logging
+
+logger = logging.getLogger(__name__)
 
 class KVA_AES:
 	def __init__(self, golden_key: bytes=None, iv: bytes=None) -> None:
@@ -17,13 +20,6 @@ class KVA_AES:
 			self.cipher = AES.new(key=self.golden_key,\
 				mode=AES.MODE_CBC, iv=self.iv)
 
-	def _pad(self, s: str):
-		return s + (self.block_size - len(s) % self.block_size) *\
-			 chr(self.block_size - len(s) % self.block_size)
-
-	def _unpad(self, s):
-		return s[:-ord(s[len(s) - 1:])]
-
 	def _setting_golden_key_and_iv(self):
 		pwd = self.config['KVA']['PWD']
 		seed = int(self.config['KVA']['SEED'])
@@ -35,19 +31,29 @@ class KVA_AES:
 		self.salt = key_dict[pwd][0]
 		self.iv = self.cipher.iv
 
+	def _reset_cipher(self):
+		# cipher is stateful which mean can't encrypt and decrypt with same object
+		# reference: https://github.com/Legrandin/pycryptodome/blob/v3.7.2/lib/Crypto/Cipher/_mode_eax.py#L205
+		if self.golden_key is not None and\
+			self.iv is not None:
+			self.cipher = AES.new(key=self.golden_key,\
+				mode=AES.MODE_CBC, iv=self.iv)
+
 	def export_bins(self):
 		export_bin(self.iv, 'iv')
 		export_bin(self.salt, 'salt')
 		export_bin(self.golden_key, 'gk')
 	
 	def encrypt(self, input_str: str):
+		self._reset_cipher()
 		result_bytes = self.cipher.encrypt(
-			self._pad(input_str))
+			pad(input_str.encode(), AES.block_size))
 
-		# need further check how to transform to human readable str...
-		return b64encode(result_bytes)
+		# use b64encode to transform human readable str
+		return b64encode(result_bytes).decode()
 	
 	def decrypt(self, input_str: str):
-		input_str_bytes = b64decode(input_str)
-		result_bytes = self._unpad(self.cipher.decrypt(input_str_bytes))
+		self._reset_cipher()
+		input_str_bytes = b64decode(input_str.encode())
+		result_bytes = unpad(self.cipher.decrypt(input_str_bytes), AES.block_size)
 		return result_bytes.decode()
