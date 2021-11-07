@@ -25,3 +25,12 @@ def test_encrypt_decrypt(test_str: str):
 	encrypt_str = aes.encrypt(test_str)
 	logger.info(f'Encrypt {test_str} as {encrypt_str}')
 	assert test_str == aes.decrypt(encrypt_str)
+
+def test_encrypt_decrypt_list():
+	test_list = ['test', 'a43h#nuu', '@^a1hn11fe']
+
+	aes = KVA_AES()
+	encrypt_list = aes.encrypt_list(test_list)
+	logger.info(f'Encrypt {test_list} as {encrypt_list}')
+	decrypt_list = aes.decrypt_list(encrypt_list)
+	assert all( t in decrypt_list for t in test_list) 

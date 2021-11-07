@@ -25,7 +25,7 @@ class KVA_AES:
 		seed = int(self.config['KVA']['SEED'])
 		# get salt and golden key
 		key_dict = get_golden_key_dict(pwd, seed)
-		
+
 		self.cipher = AES.new(key_dict[pwd][1], AES.MODE_CBC)
 		self.golden_key = key_dict[pwd][1]
 		self.salt = key_dict[pwd][0]
@@ -51,9 +51,29 @@ class KVA_AES:
 
 		# use b64encode to transform human readable str
 		return b64encode(result_bytes).decode()
-	
+
+	def encrypt_list(self, input_list: list):
+		self._reset_cipher()
+		result_list = list()
+
+		for ts in input_list:
+			result_list.append(
+				b64encode(self.cipher.encrypt(
+					pad(ts.encode(), AES.block_size))).decode())
+		return result_list
+
 	def decrypt(self, input_str: str):
 		self._reset_cipher()
 		input_str_bytes = b64decode(input_str.encode())
 		result_bytes = unpad(self.cipher.decrypt(input_str_bytes), AES.block_size)
 		return result_bytes.decode()
+
+	def decrypt_list(self, input_list: list):
+		self._reset_cipher()
+		result_list = list()
+
+		for ts in input_list:
+			result_list.append(
+				unpad(self.cipher.decrypt(
+					b64decode(ts.encode())), AES.block_size).decode())
+		return result_list
